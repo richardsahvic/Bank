@@ -47,7 +47,7 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func (s *userService) Register(userRegister repo.User, deposit int) (success bool, err error) {
+func (s *userService) Register(userRegister repo.User) (success bool, err error) {
 	success = false
 
 	reEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
@@ -63,10 +63,6 @@ func (s *userService) Register(userRegister repo.User, deposit int) (success boo
 		success = false
 		log.Printf("Email: %v is already exist", newEmail)
 		return
-	} else if err != nil {
-		success = false
-		fmt.Println("Error at user_service.go, finding email", err)
-		return
 	}
 
 	checkUsername, err := s.userRepo.FindByUsername(userRegister.Username)
@@ -75,10 +71,6 @@ func (s *userService) Register(userRegister repo.User, deposit int) (success boo
 		success = false
 		log.Printf("Username: %v is already exist", newUsername)
 		return
-	} else if err != nil {
-		success = false
-		fmt.Println("Error at user_service.go, finding username: ", err)
-		return
 	}
 
 	checkPhone, err := s.userRepo.FindByPhone(userRegister.Phone)
@@ -86,10 +78,6 @@ func (s *userService) Register(userRegister repo.User, deposit int) (success boo
 	if len(newPhone) != 0 {
 		success = false
 		log.Printf("Phone: %v is already exist", newPhone)
-		return
-	} else if err != nil {
-		success = false
-		fmt.Println("Error at user_service.go, finding phone: ", err)
 		return
 	}
 
@@ -108,12 +96,10 @@ func (s *userService) Register(userRegister repo.User, deposit int) (success boo
 
 	userRegister.ID = id
 
-	_, err = s.userRepo.InsertNewUser(userRegister)
+	success, err = s.userRepo.InsertNewUser(userRegister)
 	if err != nil {
 		fmt.Println("Error at user_service.go, ", err)
 		return
-	} else {
-		success = true
 	}
 	return
 }

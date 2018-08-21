@@ -5,7 +5,7 @@ import (
 )
 
 type UserService interface {
-	Register(userRegister repo.User, deposit int) (bool, error)
+	Register(userRegister repo.User) (bool, error)
 }
 
 var User UserService

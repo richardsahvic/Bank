@@ -37,11 +37,11 @@ func (db *userRepository) MustPrepareNamedStmt(query string) *sqlx.NamedStmt {
 
 func NewRepository(db *sqlx.DB) BankRepository {
 	r := userRepository{conn: db}
-	r.findIDStmt = r.MustPrepareStmt("SELECT * FROM user_detail WHERE id=?")
-	r.findEmailStmt = r.MustPrepareStmt("SELECT * FROM user_detail WHERE email=?")
-	r.findPhoneStmt = r.MustPrepareStmt("SELECT * FROM user_detail WHERE phone=?")
-	r.findUsernameStmt = r.MustPrepareStmt("SELECT * FROM user_detail WHERE username=?")
-	r.insertNewUserStmt = r.MustPrepareNamedStmt("INSERT INTO user_detail (id, email, username, password, balance_idr) VALUES (:id, :email, :msisdn, :username, :password, :balance_idr)")
+	r.findIDStmt = r.MustPrepareStmt("SELECT * FROM mybank.user_detail WHERE id=?")
+	r.findEmailStmt = r.MustPrepareStmt("SELECT * FROM mybank.user_detail WHERE email=?")
+	r.findPhoneStmt = r.MustPrepareStmt("SELECT * FROM mybank.user_detail WHERE phone=?")
+	r.findUsernameStmt = r.MustPrepareStmt("SELECT * FROM mybank.user_detail WHERE username=?")
+	r.insertNewUserStmt = r.MustPrepareNamedStmt("INSERT INTO mybank.user_detail (id, phone, email, username, password, balance) VALUES (:id, :phone, :email, :username, :password, :balance)")
 	return &r
 }
 

@@ -11,7 +11,7 @@ type User struct {
 	Email     string    `json:"email" db:"email"`
 	Username  string    `json:"username" db:"username"`
 	Password  string    `json:"password" db:"password"`
-	Balance   string    `json:"balance" db:"balance"`
+	Balance   int       `json:"balance" db:"balance"`
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
 }
