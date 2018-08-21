@@ -3,8 +3,9 @@ package service
 import (
 	"log"
 	"regexp"
-	"repo"
 	"time"
+
+	"repo"
 )
 
 type userService struct {
