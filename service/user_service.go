@@ -1,11 +1,16 @@
 package service
 
 import (
+	"fmt"
 	"log"
 	"regexp"
 	"time"
 
 	"repo"
+
+	"github.com/bwmarrin/snowflake"
+	"github.com/dgrijalva/jwt-go"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userService struct {
@@ -42,20 +47,73 @@ func CheckPasswordHash(password, hash string) bool {
 	return err == nil
 }
 
-func (s *userService) Register(userRegister repo.User, deposit int) (bool, error) {
+func (s *userService) Register(userRegister repo.User, deposit int) (success bool, err error) {
 	success = false
 
 	reEmail := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 	emailValid := reEmail.MatchString(userRegister.Email)
 	if !emailValid {
-		log.Println("Email format is not valid.")
+		log.Println("Email's format is not valid.")
 		return
 	}
 
 	checkEmail, err := s.userRepo.FindByEmail(userRegister.Email)
-	if len(checkEmail.Email) != 0 {
+	newEmail := checkEmail.Email
+	if len(newEmail) != 0 {
+		success = false
+		log.Printf("Email: %v is already exist", newEmail)
+		return
+	} else if err != nil {
+		success = false
+		fmt.Println("Error at user_service.go, finding email", err)
 		return
 	}
 
-	checkUsername, err := s.userRepo.F
+	checkUsername, err := s.userRepo.FindByUsername(userRegister.Username)
+	newUsername := checkUsername.Username
+	if len(newUsername) != 0 {
+		success = false
+		log.Printf("Username: %v is already exist", newUsername)
+		return
+	} else if err != nil {
+		success = false
+		fmt.Println("Error at user_service.go, finding username: ", err)
+		return
+	}
+
+	checkPhone, err := s.userRepo.FindByPhone(userRegister.Phone)
+	newPhone := checkPhone.Phone
+	if len(newPhone) != 0 {
+		success = false
+		log.Printf("Phone: %v is already exist", newPhone)
+		return
+	} else if err != nil {
+		success = false
+		fmt.Println("Error at user_service.go, finding phone: ", err)
+		return
+	}
+
+	userRegister.Password, err = HashPassword(userRegister.Password)
+	if err != nil {
+		log.Println("Failed encrypting password,  ", err)
+		return
+	}
+
+	node, err := snowflake.NewNode(1)
+	if err != nil {
+		fmt.Println("Failed generating snowflake id,    ", err)
+		return
+	}
+	id := node.Generate().String()
+
+	userRegister.ID = id
+
+	_, err = s.userRepo.InsertNewUser(userRegister)
+	if err != nil {
+		fmt.Println("Error at user_service.go, ", err)
+		return
+	} else {
+		success = true
+	}
+	return
 }
