@@ -105,5 +105,11 @@ func (s *userService) Register(userRegister repo.User) (success bool, err error)
 }
 
 func (s *userService) Login(username string, password string) (token string, err error) {
+	mySigningKey = []byte("TheSignatureofTheBank")
+
+	userData, err := s.userRepo.FindByUsername(username)
+	if err != nil {
+
+	}
 
 }
