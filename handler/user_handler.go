@@ -36,7 +36,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	registerResult, err := userService.Register(userRegister)
 	if err != nil {
 		log.Println("failed to register,    ", err)
-		w.WriteHeader(http.StatusNotAcceptable)
 	}
 
 	var regResponse request.Response
@@ -45,8 +44,6 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		regResponse.Message = "Register failed"
 	} else {
 		regResponse.Message = "Register success"
-		json.NewEncoder(w).Encode(regResponse)
-		w.WriteHeader(http.StatusBadRequest)
 	}
 
 	json.NewEncoder(w).Encode(regResponse)

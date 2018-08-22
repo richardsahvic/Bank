@@ -103,3 +103,7 @@ func (s *userService) Register(userRegister repo.User) (success bool, err error)
 	}
 	return
 }
+
+func (s *userService) Login(username string, password string) (token string, err error) {
+
+}

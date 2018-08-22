@@ -6,6 +6,7 @@ import (
 
 type UserService interface {
 	Register(userRegister repo.User) (bool, error)
+	Login(username string, password string) (string, error)
 }
 
 var User UserService
