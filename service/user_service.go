@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"repo"
@@ -109,7 +110,56 @@ func (s *userService) Login(username string, password string) (token string, err
 
 	userData, err := s.userRepo.FindByUsername(username)
 	if err != nil {
-
+		fmt.Println("Error at user service, getting user data: ", err)
+		return
 	}
+
+	match := CheckPasswordHash(password, userData.Password)
+	if !match {
+		log.Println("Wrong password")
+		return
+	}
+
+	claims := Token{
+		jwt.StandardClaims{
+			Subject:   userData.ID,
+			ExpiresAt: time.Now().Add(1 * time.Hour).Unix(),
+		},
+	}
+
+	signing := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token, _ = signing.SignedString(mySigningKey)
+	if len(token) == 0 {
+		log.Println("Failed to generate token")
+		return
+	}
+	return
+}
+
+func (s *userService) CheckBalance(token string) (balance string, err error) {
+	var id string
+
+	at(time.Unix(0, 0), func() {
+		tokenClaims, err := jwt.ParseWithClaims(token, &Token{}, func(tokenClaims *jwt.Token) (interface{}, error) {
+			return []byte("IDKWhatThisIs"), nil
+		})
+
+		if claims, _ := tokenClaims.Claims.(*Token); claims.ExpiresAt > time.Now().Unix() {
+			id = claims.StandardClaims.Subject
+			log.Println(claims.Subject)
+		} else {
+			fmt.Println("token Invalid,    ", err)
+		}
+	})
+
+	userData, err := s.userRepo.FindByID(id)
+	if err != nil {
+		fmt.Println("Error at user service, getting balance: ", err)
+		return
+	}
+
+	balance = strconv.Itoa(userData.Balance) + " IDR"
+
+	return
 
 }
