@@ -146,7 +146,7 @@ func DepositHandler(w http.ResponseWriter, r *http.Request) {
 
 	body, _ := ioutil.ReadAll(io.LimitReader(r.Body, 5000))
 
-	var depositReq request.DepositRequest
+	var depositReq request.DepositandWithdrawRequest
 	json.Unmarshal(body, &depositReq)
 
 	success, err := userService.Deposit(token, depositReq.Amount)
@@ -160,6 +160,32 @@ func DepositHandler(w http.ResponseWriter, r *http.Request) {
 		depositResp.Message = "Failed to deposit money"
 	} else {
 		depositResp.Message = "Deposit success"
+	}
+
+	json.NewEncoder(w).Encode(depositResp)
+}
+
+func WithdrawalHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	token := r.Header.Get("token")
+
+	body, _ := ioutil.ReadAll(io.LimitReader(r.Body, 5000))
+
+	var withdrawReq request.DepositandWithdrawRequest
+	json.Unmarshal(body, &withdrawReq)
+
+	success, err := userService.Withdrawal(token, withdrawReq.Amount)
+	if err != nil {
+		log.Println("Failed to deposit: ", err)
+	}
+
+	var depositResp request.Response
+
+	if !success {
+		depositResp.Message = "Failed to withdraw money"
+	} else {
+		depositResp.Message = "Withdraw success"
 	}
 
 	json.NewEncoder(w).Encode(depositResp)

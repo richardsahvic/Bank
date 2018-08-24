@@ -27,6 +27,6 @@ type DeleteRequest struct {
 	Password string `json:"password"`
 }
 
-type DepositRequest struct {
+type DepositandWithdrawRequest struct {
 	Amount int `json:"amount"`
 }
