@@ -138,3 +138,29 @@ func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(deleteResp)
 }
+
+func DepositHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	token := r.Header.Get("token")
+
+	body, _ := ioutil.ReadAll(io.LimitReader(r.Body, 5000))
+
+	var depositReq request.DepositRequest
+	json.Unmarshal(body, &depositReq)
+
+	success, err := userService.Deposit(token, depositReq.Amount)
+	if err != nil {
+		log.Println("Failed to deposit: ", err)
+	}
+
+	var depositResp request.Response
+
+	if !success {
+		depositResp.Message = "Failed to deposit money"
+	} else {
+		depositResp.Message = "Deposit success"
+	}
+
+	json.NewEncoder(w).Encode(depositResp)
+}

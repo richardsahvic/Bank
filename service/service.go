@@ -10,6 +10,7 @@ type UserService interface {
 	CheckBalance(token string) (string, error)
 	ChangePassword(token string, password string, newPassword string) (bool, error)
 	DeleteAccount(token string, password string) (bool, error)
+	Deposit(token string, amount int) (bool, error)
 }
 
 var User UserService

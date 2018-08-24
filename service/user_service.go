@@ -24,6 +24,7 @@ type Token struct {
 }
 
 var mySigningKey []byte
+var minimalTransaction = 10000
 
 func at(t time.Time, f func()) {
 	jwt.TimeFunc = func() time.Time {
@@ -242,6 +243,45 @@ func (s *userService) DeleteAccount(token string, password string) (success bool
 	success, err = s.userRepo.DeleteAccount(id)
 	if err != nil {
 		log.Println("Error at user service, updating password: ", err)
+		return
+	}
+	return
+}
+
+func (s *userService) Deposit(token string, amount int) (success bool, err error) {
+	success = false
+
+	if amount < minimalTransaction {
+		log.Println("The amount of the transaction is too low")
+		return
+	}
+
+	var id string
+
+	at(time.Unix(0, 0), func() {
+		tokenClaims, err := jwt.ParseWithClaims(token, &Token{}, func(tokenClaims *jwt.Token) (interface{}, error) {
+			return []byte("IDKWhatThisIs"), nil
+		})
+
+		if claims, _ := tokenClaims.Claims.(*Token); claims.ExpiresAt > time.Now().Unix() {
+			id = claims.StandardClaims.Subject
+			log.Println(claims.Subject)
+		} else {
+			fmt.Println("token Invalid,    ", err)
+		}
+	})
+
+	userData, err := s.userRepo.FindByID(id)
+	if err != nil {
+		fmt.Println("Error at user service, getting balance: ", err)
+		return
+	}
+
+	balance := userData.Balance + amount
+
+	success, err = s.userRepo.UpdateBalance(id, balance)
+	if err != nil {
+		log.Println("Error at user service, updating balance: ", err)
 		return
 	}
 	return

@@ -15,6 +15,7 @@ type userRepository struct {
 	findPhoneStmt      *sqlx.Stmt
 	findUsernameStmt   *sqlx.Stmt
 	updatePasswordStmt *sqlx.Stmt
+	updateBalanceStmt  *sqlx.Stmt
 	deleteAccountStmt  *sqlx.Stmt
 	insertNewUserStmt  *sqlx.NamedStmt
 }
@@ -44,6 +45,7 @@ func NewRepository(db *sqlx.DB) BankRepository {
 	r.findPhoneStmt = r.MustPrepareStmt("SELECT * FROM mybank.user_detail WHERE phone=?")
 	r.findUsernameStmt = r.MustPrepareStmt("SELECT * FROM mybank.user_detail WHERE username=?")
 	r.updatePasswordStmt = r.MustPrepareStmt("UPDATE mybank.user_detail SET password=? WHERE id=?")
+	r.updateBalanceStmt = r.MustPrepareStmt("UPDATE mybank.user_detail SET Balance=? WHERE id=?")
 	r.deleteAccountStmt = r.MustPrepareStmt("DELETE FROM mybank.user_detail WHERE id=?")
 	r.insertNewUserStmt = r.MustPrepareNamedStmt("INSERT INTO mybank.user_detail (id, phone, email, username, password, balance) VALUES (:id, :phone, :email, :username, :password, :balance)")
 	return &r
@@ -110,6 +112,17 @@ func (db *userRepository) DeleteAccount(id string) (success bool, err error) {
 	_, err = db.deleteAccountStmt.Exec(id)
 	if err != nil {
 		log.Println("Error deleting account: ", err)
+		success = false
+		return
+	}
+	success = true
+	return
+}
+
+func (db *userRepository) UpdateBalance(id string, balance int) (success bool, err error) {
+	_, err = db.updateBalanceStmt.Exec(balance, id)
+	if err != nil {
+		log.Println("Error updating balance: ", err)
 		success = false
 		return
 	}

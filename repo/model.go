@@ -21,6 +21,6 @@ type Transaction struct {
 	ID         string    `json:"trans_id" db:"id"`
 	SenderID   string    `json:"sender_id" db:"sender_id"`
 	RecieverID string    `json:"reciever_id" db:"reciever_id"`
-	Total      string    `json:"total" db:"total"`
+	Total      int       `json:"total" db:"total"`
 	CreatedAt  time.Time `json:"created_at" db:"created_at"`
 }
