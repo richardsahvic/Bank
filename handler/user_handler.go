@@ -44,9 +44,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		regResponse.Message = "Register failed"
 	} else {
 		regResponse.Message = "Register success"
+		json.NewEncoder(w).Encode(regResponse)
 	}
-
-	json.NewEncoder(w).Encode(regResponse)
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -87,4 +86,55 @@ func CheckBalanceHandler(w http.ResponseWriter, r *http.Request) {
 	balance = "balance: " + balance
 
 	json.NewEncoder(w).Encode(balance)
+}
+
+func ChangePasswordHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	token := r.Header.Get("token")
+
+	body, _ := ioutil.ReadAll(io.LimitReader(r.Body, 5000))
+
+	var changePasswordReq request.ChangePasswordRequest
+	json.Unmarshal(body, &changePasswordReq)
+
+	success, err := userService.ChangePassword(token, changePasswordReq.Password, changePasswordReq.NewPassword)
+	if err != nil {
+		log.Println("Failed to register: ", err)
+	}
+
+	var changePwResp request.Response
+
+	if !success {
+		changePwResp.Message = "Failed to change password"
+	} else {
+		changePwResp.Message = "Password changed"
+	}
+	json.NewEncoder(w).Encode(changePwResp)
+}
+
+func DeleteAccountHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	token := r.Header.Get("token")
+
+	body, _ := ioutil.ReadAll(io.LimitReader(r.Body, 5000))
+
+	var deleteReq request.DeleteRequest
+	json.Unmarshal(body, &deleteReq)
+
+	success, err := userService.DeleteAccount(token, deleteReq.Password)
+	if err != nil {
+		log.Println("Failed to delete account: ", err)
+	}
+
+	var deleteResp request.Response
+
+	if !success {
+		deleteResp.Message = "Failed to delete account"
+	} else {
+		deleteResp.Message = "Account Deleted"
+	}
+
+	json.NewEncoder(w).Encode(deleteResp)
 }

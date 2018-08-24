@@ -163,3 +163,86 @@ func (s *userService) CheckBalance(token string) (balance string, err error) {
 	return
 
 }
+
+func (s *userService) ChangePassword(token string, password string, newPassword string) (success bool, err error) {
+	success = false
+
+	var id string
+
+	at(time.Unix(0, 0), func() {
+		tokenClaims, err := jwt.ParseWithClaims(token, &Token{}, func(tokenClaims *jwt.Token) (interface{}, error) {
+			return []byte("IDKWhatThisIs"), nil
+		})
+
+		if claims, _ := tokenClaims.Claims.(*Token); claims.ExpiresAt > time.Now().Unix() {
+			id = claims.StandardClaims.Subject
+			log.Println(claims.Subject)
+		} else {
+			fmt.Println("token Invalid,    ", err)
+		}
+	})
+
+	userData, err := s.userRepo.FindByID(id)
+	if err != nil {
+		fmt.Println("Error at user service, getting balance: ", err)
+		return
+	}
+
+	match := CheckPasswordHash(password, userData.Password)
+	if !match {
+		log.Println("Wrong password")
+		return
+	}
+
+	hashedNewPass, err := HashPassword(newPassword)
+	if err != nil {
+		log.Println("Failed encrypting password,  ", err)
+		return
+	}
+
+	success, err = s.userRepo.UpdatePassword(id, hashedNewPass)
+	if err != nil {
+		log.Println("Error at user service, updating password: ", err)
+		return
+	}
+	return
+
+}
+
+func (s *userService) DeleteAccount(token string, password string) (success bool, err error) {
+	success = false
+
+	var id string
+
+	at(time.Unix(0, 0), func() {
+		tokenClaims, err := jwt.ParseWithClaims(token, &Token{}, func(tokenClaims *jwt.Token) (interface{}, error) {
+			return []byte("IDKWhatThisIs"), nil
+		})
+
+		if claims, _ := tokenClaims.Claims.(*Token); claims.ExpiresAt > time.Now().Unix() {
+			id = claims.StandardClaims.Subject
+			log.Println(claims.Subject)
+		} else {
+			fmt.Println("token Invalid,    ", err)
+		}
+	})
+
+	userData, err := s.userRepo.FindByID(id)
+	if err != nil {
+		fmt.Println("Error at user service, getting balance: ", err)
+		return
+	}
+
+	match := CheckPasswordHash(password, userData.Password)
+	if !match {
+		log.Println("Wrong password")
+		return
+	}
+
+	success, err = s.userRepo.DeleteAccount(id)
+	if err != nil {
+		log.Println("Error at user service, updating password: ", err)
+		return
+	}
+	return
+}

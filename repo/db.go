@@ -9,12 +9,14 @@ import (
 )
 
 type userRepository struct {
-	conn              *sqlx.DB
-	findIDStmt        *sqlx.Stmt
-	findEmailStmt     *sqlx.Stmt
-	findPhoneStmt     *sqlx.Stmt
-	findUsernameStmt  *sqlx.Stmt
-	insertNewUserStmt *sqlx.NamedStmt
+	conn               *sqlx.DB
+	findIDStmt         *sqlx.Stmt
+	findEmailStmt      *sqlx.Stmt
+	findPhoneStmt      *sqlx.Stmt
+	findUsernameStmt   *sqlx.Stmt
+	updatePasswordStmt *sqlx.Stmt
+	deleteAccountStmt  *sqlx.Stmt
+	insertNewUserStmt  *sqlx.NamedStmt
 }
 
 func (db *userRepository) MustPrepareStmt(query string) *sqlx.Stmt {
@@ -41,6 +43,8 @@ func NewRepository(db *sqlx.DB) BankRepository {
 	r.findEmailStmt = r.MustPrepareStmt("SELECT * FROM mybank.user_detail WHERE email=?")
 	r.findPhoneStmt = r.MustPrepareStmt("SELECT * FROM mybank.user_detail WHERE phone=?")
 	r.findUsernameStmt = r.MustPrepareStmt("SELECT * FROM mybank.user_detail WHERE username=?")
+	r.updatePasswordStmt = r.MustPrepareStmt("UPDATE mybank.user_detail SET password=? WHERE id=?")
+	r.deleteAccountStmt = r.MustPrepareStmt("DELETE FROM mybank.user_detail WHERE id=?")
 	r.insertNewUserStmt = r.MustPrepareNamedStmt("INSERT INTO mybank.user_detail (id, phone, email, username, password, balance) VALUES (:id, :phone, :email, :username, :password, :balance)")
 	return &r
 }
@@ -81,10 +85,31 @@ func (db *userRepository) FindByUsername(username string) (usr User, err error) 
 	return
 }
 
+func (db *userRepository) UpdatePassword(id string, newPassword string) (success bool, err error) {
+	_, err = db.updatePasswordStmt.Exec(newPassword, id)
+	if err != nil {
+		log.Println("Failed to update password: ", err)
+		success = false
+	}
+	success = true
+	return
+}
+
 func (db *userRepository) InsertNewUser(newUser User) (success bool, err error) {
 	_, err = db.insertNewUserStmt.Exec(newUser)
 	if err != nil {
 		log.Println("Error inserting new user:  ", err)
+		success = false
+		return
+	}
+	success = true
+	return
+}
+
+func (db *userRepository) DeleteAccount(id string) (success bool, err error) {
+	_, err = db.deleteAccountStmt.Exec(id)
+	if err != nil {
+		log.Println("Error deleting account: ", err)
 		success = false
 		return
 	}

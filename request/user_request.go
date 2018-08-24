@@ -17,3 +17,12 @@ type LoginRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
+
+type ChangePasswordRequest struct {
+	Password    string `json:"password"`
+	NewPassword string `json:"newpassword"`
+}
+
+type DeleteRequest struct {
+	Password string `json:"password"`
+}
