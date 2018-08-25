@@ -12,6 +12,7 @@ type UserService interface {
 	DeleteAccount(token string, password string) (bool, error)
 	Deposit(token string, amount int) (bool, error)
 	Withdrawal(token string, amount int) (bool, error)
+	Transfer(token string, destPhone string, amount int) (bool, error)
 }
 
 var User UserService

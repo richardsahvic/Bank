@@ -325,3 +325,59 @@ func (s *userService) Withdrawal(token string, amount int) (success bool, err er
 	}
 	return
 }
+
+func (s *userService) Transfer(token string, destPhone string, amount int) (success bool, err error) {
+	success = false
+
+	if amount < minimalTransaction {
+		log.Println("The amount of the transaction is too low")
+		return
+	}
+
+	var id string
+
+	at(time.Unix(0, 0), func() {
+		tokenClaims, err := jwt.ParseWithClaims(token, &Token{}, func(tokenClaims *jwt.Token) (interface{}, error) {
+			return []byte("IDKWhatThisIs"), nil
+		})
+
+		if claims, _ := tokenClaims.Claims.(*Token); claims.ExpiresAt > time.Now().Unix() {
+			id = claims.StandardClaims.Subject
+			log.Println(claims.Subject)
+		} else {
+			fmt.Println("token Invalid,    ", err)
+		}
+	})
+
+	senderData, err := s.userRepo.FindByID(id)
+	if err != nil {
+		fmt.Println("Error at user service, getting balance: ", err)
+		return
+	}
+
+	if senderData.Balance < amount {
+		log.Println("Sender's balance is not enough to make the transaction")
+		return
+	}
+
+	recieverData, err := s.userRepo.FindByPhone(destPhone)
+	if err != nil {
+		fmt.Println("Error at user service, getting reciever: ", err)
+		return
+	}
+
+	senderBalance := senderData.Balance - amount
+	recieverBalance := recieverData.Balance + amount
+
+	sent, _ := s.userRepo.UpdateBalance(senderData.ID, senderBalance)
+	recieved, _ := s.userRepo.UpdateBalance(recieverData.ID, recieverBalance)
+
+	if !sent && !recieved {
+		fmt.Println("Error at user service, transaction failed: ", err)
+		return
+	} else if sent && recieved {
+		success = true
+		log.Printf("%v recieved %d \n", recieverData.Username, amount)
+	}
+	return
+}

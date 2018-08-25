@@ -15,5 +15,6 @@ func Routes() *mux.Router {
 	route.HandleFunc("/deleteaccount", handler.DeleteAccountHandler).Methods("POST")
 	route.HandleFunc("/deposit", handler.DepositHandler).Methods("POST")
 	route.HandleFunc("/withdraw", handler.WithdrawalHandler).Methods("POST")
+	route.HandleFunc("/transfer", handler.TransferHandler).Methods("POST")
 	return route
 }

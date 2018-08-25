@@ -44,8 +44,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 		regResponse.Message = "Register failed"
 	} else {
 		regResponse.Message = "Register success"
-		json.NewEncoder(w).Encode(regResponse)
 	}
+	json.NewEncoder(w).Encode(regResponse)
 }
 
 func LoginHandler(w http.ResponseWriter, r *http.Request) {
@@ -68,8 +68,10 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		loginResp.Message = "Login failed"
 		w.WriteHeader(http.StatusUnauthorized)
 	} else {
+		loginResp.Message = "Logged in"
 		w.Header().Set("token", loginToken)
 	}
+	json.NewEncoder(w).Encode(loginResp)
 }
 
 func CheckBalanceHandler(w http.ResponseWriter, r *http.Request) {
@@ -189,4 +191,30 @@ func WithdrawalHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(depositResp)
+}
+
+func TransferHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	token := r.Header.Get("token")
+
+	body, _ := ioutil.ReadAll(io.LimitReader(r.Body, 5000))
+
+	var transferReq request.TransferRequest
+	json.Unmarshal(body, &transferReq)
+
+	success, err := userService.Transfer(token, transferReq.DestPhone, transferReq.Amount)
+	if err != nil {
+		log.Println("Failed to transfer: ", err)
+	}
+
+	var transferResp request.Response
+
+	if !success {
+		transferResp.Message = "Transaction failed"
+	} else {
+		transferResp.Message = "Transaction success"
+	}
+
+	json.NewEncoder(w).Encode(transferResp)
 }

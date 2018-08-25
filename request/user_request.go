@@ -30,3 +30,8 @@ type DeleteRequest struct {
 type DepositandWithdrawRequest struct {
 	Amount int `json:"amount"`
 }
+
+type TransferRequest struct {
+	Amount    int    `json:"amount"`
+	DestPhone string `json:"phone"`
+}
