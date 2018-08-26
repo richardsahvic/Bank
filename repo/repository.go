@@ -9,4 +9,6 @@ type BankRepository interface {
 	UpdateBalance(id string, balance int) (bool, error)
 	DeleteAccount(id string) (bool, error)
 	InsertNewUser(user User) (bool, error)
+	NewTransaction(transaction Transaction) (bool, error)
+	CheckTransaction(senderPhone string, recieverPhone string) ([]Transaction, error)
 }

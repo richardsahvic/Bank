@@ -376,8 +376,64 @@ func (s *userService) Transfer(token string, destPhone string, amount int) (succ
 		fmt.Println("Error at user service, transaction failed: ", err)
 		return
 	} else if sent && recieved {
-		success = true
 		log.Printf("%v recieved %d \n", recieverData.Username, amount)
 	}
+
+	node, err := snowflake.NewNode(1)
+	if err != nil {
+		fmt.Println("Failed generating snowflake id,    ", err)
+		return
+	}
+	transactionID := node.Generate().String()
+
+	newTransaction := repo.Transaction{
+		ID:            transactionID,
+		SenderPhone:   senderData.Phone,
+		RecieverPhone: recieverData.Phone,
+		Total:         amount,
+	}
+
+	success, err = s.userRepo.NewTransaction(newTransaction)
+	if err != nil {
+		log.Println("Failed to enter the new transaction to db:  ", err)
+	}
+
 	return
+}
+
+func (s *userService) TransactionByReciever(token string, recieverPhone string) (transactions []repo.Transaction, err error) {
+	var id string
+
+	at(time.Unix(0, 0), func() {
+		tokenClaims, err := jwt.ParseWithClaims(token, &Token{}, func(tokenClaims *jwt.Token) (interface{}, error) {
+			return []byte("IDKWhatThisIs"), nil
+		})
+
+		if claims, _ := tokenClaims.Claims.(*Token); claims.ExpiresAt > time.Now().Unix() {
+			id = claims.StandardClaims.Subject
+			log.Println(claims.Subject)
+		} else {
+			fmt.Println("token Invalid,    ", err)
+		}
+	})
+
+	senderData, err := s.userRepo.FindByID(id)
+	if err != nil {
+		fmt.Println("Error at user service, getting balance: ", err)
+		return
+	}
+
+	checkReciever, err := s.userRepo.FindByPhone(recieverPhone)
+	if err != nil {
+		log.Printf("Phone: %v is not registered\n error:  %v ", recieverPhone, err)
+		return
+	}
+
+	transactions, err = s.userRepo.CheckTransaction(senderData.Phone, checkReciever.Phone)
+	if err != nil {
+		log.Println("Failed to get transactions")
+	}
+
+	return
+
 }

@@ -218,3 +218,22 @@ func TransferHandler(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(transferResp)
 }
+
+func CheckTransactionRecieverHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	token := r.Header.Get("token")
+	recieverPhone := r.Header.Get("phone")
+
+	transactions, err := userService.TransactionByReciever(token, recieverPhone)
+	if err != nil {
+		response := request.Response{
+			Message: "Failed to check transaction",
+		}
+
+		json.NewEncoder(w).Encode(response)
+		return
+	}
+
+	json.NewEncoder(w).Encode(transactions)
+}

@@ -18,9 +18,9 @@ type User struct {
 
 // Transaction is table transaction's model
 type Transaction struct {
-	ID         string    `json:"trans_id" db:"id"`
-	SenderID   string    `json:"sender_id" db:"sender_id"`
-	RecieverID string    `json:"reciever_id" db:"reciever_id"`
-	Total      int       `json:"total" db:"total"`
-	CreatedAt  time.Time `json:"created_at" db:"created_at"`
+	ID            string    `json:"trans_id" db:"id"`
+	SenderPhone   string    `json:"sender_phone" db:"sender_phone"`
+	RecieverPhone string    `json:"reciever_phone" db:"reciever_phone"`
+	Total         int       `json:"total" db:"total"`
+	CreatedAt     time.Time `json:"created_at" db:"created_at"`
 }

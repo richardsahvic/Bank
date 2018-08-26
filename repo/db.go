@@ -9,15 +9,17 @@ import (
 )
 
 type userRepository struct {
-	conn               *sqlx.DB
-	findIDStmt         *sqlx.Stmt
-	findEmailStmt      *sqlx.Stmt
-	findPhoneStmt      *sqlx.Stmt
-	findUsernameStmt   *sqlx.Stmt
-	updatePasswordStmt *sqlx.Stmt
-	updateBalanceStmt  *sqlx.Stmt
-	deleteAccountStmt  *sqlx.Stmt
-	insertNewUserStmt  *sqlx.NamedStmt
+	conn                      *sqlx.DB
+	findIDStmt                *sqlx.Stmt
+	findEmailStmt             *sqlx.Stmt
+	findPhoneStmt             *sqlx.Stmt
+	findUsernameStmt          *sqlx.Stmt
+	updatePasswordStmt        *sqlx.Stmt
+	updateBalanceStmt         *sqlx.Stmt
+	deleteAccountStmt         *sqlx.Stmt
+	transactionByRecieverStmt *sqlx.Stmt
+	insertNewUserStmt         *sqlx.NamedStmt
+	newTransactionStmt        *sqlx.NamedStmt
 }
 
 func (db *userRepository) MustPrepareStmt(query string) *sqlx.Stmt {
@@ -47,7 +49,9 @@ func NewRepository(db *sqlx.DB) BankRepository {
 	r.updatePasswordStmt = r.MustPrepareStmt("UPDATE mybank.user_detail SET password=? WHERE id=?")
 	r.updateBalanceStmt = r.MustPrepareStmt("UPDATE mybank.user_detail SET Balance=? WHERE id=?")
 	r.deleteAccountStmt = r.MustPrepareStmt("DELETE FROM mybank.user_detail WHERE id=?")
+	r.transactionByRecieverStmt = r.MustPrepareStmt("SELECT * FROM mybank.transactions WHERE sender_phone=? AND reciever_phone=?")
 	r.insertNewUserStmt = r.MustPrepareNamedStmt("INSERT INTO mybank.user_detail (id, phone, email, username, password, balance) VALUES (:id, :phone, :email, :username, :password, :balance)")
+	r.newTransactionStmt = r.MustPrepareNamedStmt("INSERT INTO mybank.transactions (id, sender_phone, reciever_phone, total) VALUES (:id, :sender_phone, :reciever_phone, :total)")
 	return &r
 }
 
@@ -97,17 +101,6 @@ func (db *userRepository) UpdatePassword(id string, newPassword string) (success
 	return
 }
 
-func (db *userRepository) InsertNewUser(newUser User) (success bool, err error) {
-	_, err = db.insertNewUserStmt.Exec(newUser)
-	if err != nil {
-		log.Println("Error inserting new user:  ", err)
-		success = false
-		return
-	}
-	success = true
-	return
-}
-
 func (db *userRepository) DeleteAccount(id string) (success bool, err error) {
 	_, err = db.deleteAccountStmt.Exec(id)
 	if err != nil {
@@ -127,5 +120,35 @@ func (db *userRepository) UpdateBalance(id string, balance int) (success bool, e
 		return
 	}
 	success = true
+	return
+}
+
+func (db *userRepository) InsertNewUser(newUser User) (success bool, err error) {
+	_, err = db.insertNewUserStmt.Exec(newUser)
+	if err != nil {
+		log.Println("Error inserting new user:  ", err)
+		success = false
+		return
+	}
+	success = true
+	return
+}
+
+func (db *userRepository) NewTransaction(transaction Transaction) (success bool, err error) {
+	_, err = db.newTransactionStmt.Exec(transaction)
+	if err != nil {
+		log.Println("Error inserting new transaction to db:  ", err)
+		success = false
+		return
+	}
+	success = true
+	return
+}
+
+func (db *userRepository) CheckTransaction(sender_phone string, reciever_phone string) (transactions []Transaction, err error) {
+	err = db.transactionByRecieverStmt.Select(&transactions, sender_phone, reciever_phone)
+	if err != nil {
+		log.Println("Error getting transactions:  ", err)
+	}
 	return
 }

@@ -13,6 +13,7 @@ type UserService interface {
 	Deposit(token string, amount int) (bool, error)
 	Withdrawal(token string, amount int) (bool, error)
 	Transfer(token string, destPhone string, amount int) (bool, error)
+	TransactionByReciever(token string, recieverPhone string) ([]repo.Transaction, error)
 }
 
 var User UserService
