@@ -234,6 +234,5 @@ func CheckTransactionRecieverHandler(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(response)
 		return
 	}
-
 	json.NewEncoder(w).Encode(transactions)
 }
